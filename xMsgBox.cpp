@@ -20,7 +20,7 @@ using namespace std;
 /** ********************************************************
  ** Module globals and consts.
  **/
-// MsgBox globals.
+// xMsgBox globals.
 int mMsgBoxXPos;
 int mMsgBoxYPos;
 
@@ -56,7 +56,7 @@ int main(int argCount, char** argValues) {
         exit(1);
     }
 
-    // Set MsgBox globals from user.
+    // Set xMsgBox globals from user.
     mMsgBoxXPos = atoi(argValues[1]);
     mMsgBoxYPos = atoi(argValues[2]);
     mMsgBoxTitle += argValues[3];
@@ -92,13 +92,13 @@ int main(int argCount, char** argValues) {
         logDebugValues(argCount);
     }
 
-    // Create MsgBox from X11 window.
+    // Create xMsgBox from X11 window.
     mMsgBox = XCreateSimpleWindow(mDisplay,
         DefaultRootWindow(mDisplay), 0, 0,
         mMsgBoxWindowWidth, mMsgBoxWindowHeight, 1,
         BlackPixel(mDisplay, 0), WhitePixel(mDisplay, 0));
 
-    // Set MsgBox title string.
+    // Set xMsgBox title string.
     XTextProperty properties;
     properties.value = (unsigned char*) mMsgBoxTitle.c_str();
 
@@ -107,7 +107,7 @@ int main(int argCount, char** argValues) {
     properties.nitems = mMsgBoxTitle.length();
     XSetWMName(mDisplay, mMsgBox, &properties);
 
-    // Set MsgBox icon.
+    // Set xMsgBox icon.
     char* appName = strdup("msgbox");
     char* iconName = mMsgBoxTitle == "Error" ? strdup("xmsgboxerror") :
         mMsgBoxTitle == "Warning" ? strdup("xmsgboxwarning") :
@@ -123,7 +123,7 @@ int main(int argCount, char** argValues) {
     XStringListToTextProperty(&iconName, 1, &iconProperty);
     XSetWMIconName(mDisplay, mMsgBox, &iconProperty);
 
-    // Map (show) MsgBox window.
+    // Map (show) xMsgBox window.
     XMapWindow(mDisplay, mMsgBox);
     XMoveWindow(mDisplay, mMsgBox, mMsgBoxXPos, mMsgBoxYPos);
 
@@ -151,7 +151,7 @@ int main(int argCount, char** argValues) {
             break;
         }
 
-        // Process Expose event. Set the MsgBox
+        // Process Expose event. Set the xMsgBox
         // Msg on Window expose.
         if (event.type == Expose) {
             if (DEBUG_IS_ON) {
@@ -168,7 +168,7 @@ int main(int argCount, char** argValues) {
 }
 
 /** ********************************************************
- ** This method displays the MsgBox version string.
+ ** This method displays the xMsgBox version string.
  **/
 void displayVersion() {
     cout << COLOR_BLUE << "\n" << APP_VERSION <<
@@ -249,7 +249,7 @@ int getStringPixelHeight(string textString) {
 }
 
 /** ********************************************************
- ** This method draws an visual outline of the MsgBox
+ ** This method draws an visual outline of the xMsgBox
  ** for debugging. S/b safe to remove / deprecate.
  **/
 void drawMessageBoxOutLines(int argCount) {

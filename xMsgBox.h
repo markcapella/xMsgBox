@@ -10,7 +10,7 @@
 #define COLOR_GREEN "\033[1;32m"
 #define COLOR_NORMAL "\033[0m"
 
-// MsgBox consts.
+// xMsgBox consts.
 #define PIXELS_BETWEEN_MSGBOX_TEXTAREA_LINES 6
 
 #define LEFT_MARGIN 100
