@@ -16,14 +16,14 @@ COLOR_NORMAL = \033[0m
 CC = g++
 
 X11_CFLAGS = `pkg-config --cflags x11`
-FREETYPE_CFLAGS = `pkg-config --cflags xft`
-
 X11_LFLAGS = `pkg-config --libs x11`
+
+FREETYPE_CFLAGS = `pkg-config --cflags xft`
 FREETYPE_LFLAGS = `pkg-config --libs xft`
 
 
 # ****************************************************
-# Compile & link.
+# make
 #
 all: xMsgBox.cpp
 	@if [ "$(shell id -u)" = 0 ]; then \
@@ -46,10 +46,10 @@ all: xMsgBox.cpp
 	$(CC) xMsgBox.o $(X11_LFLAGS) $(FREETYPE_LFLAGS) \
 		-o xMsgBox
 
+	@echo "true" > "BUILD_COMPLETE"
+
 	@echo
 	@echo "$(COLOR_BLUE)Build Done.$(COLOR_NORMAL)"
-
-	@echo "true" > "BUILD_COMPLETE"
 
 # ****************************************************
 # sudo make install
@@ -85,9 +85,9 @@ install:
 	chmod +x /usr/local/bin/xMsgBox
 	@echo
 
-	cp 'xmsgboxinfo.png' /usr/share/icons/hicolor/48x48/apps/
-	cp 'xmsgboxwarning.png' /usr/share/icons/hicolor/48x48/apps/
 	cp 'xmsgboxerror.png' /usr/share/icons/hicolor/48x48/apps/
+	cp 'xmsgboxwarning.png' /usr/share/icons/hicolor/48x48/apps/
+	cp 'xmsgboxinfo.png' /usr/share/icons/hicolor/48x48/apps/
 
 	@echo
 	@echo "$(COLOR_BLUE)Install Done.$(COLOR_NORMAL)"
@@ -114,9 +114,9 @@ uninstall:
 	rm -f /usr/local/bin/xMsgBox
 	@echo
 
-	rm -f /usr/share/icons/hicolor/48x48/apps/xmsgboxinfo.png
-	rm -f /usr/share/icons/hicolor/48x48/apps/xmsgboxwarning.png
 	rm -f /usr/share/icons/hicolor/48x48/apps/xmsgboxerror.png
+	rm -f /usr/share/icons/hicolor/48x48/apps/xmsgboxwarning.png
+	rm -f /usr/share/icons/hicolor/48x48/apps/xmsgboxinfo.png
 
 	@echo
 	@echo "$(COLOR_BLUE)Uninstall Done.$(COLOR_NORMAL)"

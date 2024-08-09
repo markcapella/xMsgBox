@@ -20,30 +20,28 @@ using namespace std;
 /** ********************************************************
  ** Module globals and consts.
  **/
+Display* mDisplay;
+Window mMsgBox;
+XftFont* mFont;
+
+const XftColor mFontColor = { .pixel = 0x0, .color = { 
+    .red = 0xff, .green = 0xff,
+    .blue = 0xff, .alpha = 0xffff } };
+
 // xMsgBox globals.
 int mMsgBoxXPos;
 int mMsgBoxYPos;
 
 string mMsgBoxTitle;
 
-int mMsgBoxTextareaWidth;
-int mMsgBoxTextareaHeight;
-
 int mMsgBoxWindowWidth;
 int mMsgBoxWindowHeight;
 
+int mMsgBoxTextareaWidth;
+int mMsgBoxTextareaHeight;
+
 std::list<string> mMsgBoxLines;
 
-// Module globals.
-Display* mDisplay;
-
-Window mMsgBox;
-
-XftFont* mFont;
-
-const XftColor mFontColor = { .pixel = 0x0, .color = { 
-    .red = 0xff, .green = 0xff,
-    .blue = 0xff, .alpha = 0xffff } };
 
 /** ********************************************************
  ** Module Entry.
@@ -51,28 +49,29 @@ const XftColor mFontColor = { .pixel = 0x0, .color = {
 int main(int argCount, char** argValues) {
     // Ensure proper invocation.
     if (argCount < APP_PARMS_REQUIRED) {
-        displayVersion();
         displayUsage();
         exit(1);
     }
 
-    // Set xMsgBox globals from user.
+    // Parse invocation.
     mMsgBoxXPos = atoi(argValues[1]);
     mMsgBoxYPos = atoi(argValues[2]);
     mMsgBoxTitle += argValues[3];
 
-    // Open X11, ensure it's available.
+    // Open X11 display, ensure it's available.
     mDisplay = XOpenDisplay(NULL);
     if (mDisplay == NULL) {
-        cout << COLOR_RED << "\nMsgBox: X11 Windows are "
-            "unavailable with this desktop - FATAL.\n" << COLOR_NORMAL;
+        cout << COLOR_RED << "\nxMsgBox: X11 Windows are "
+            "unavailable with this desktop. - FATAL" <<
+            COLOR_NORMAL << "\n";
         exit(2);
     }
 
-    // Set font for layouts. // -misc-fixed-medium-r-normal
-    mFont = XftFontOpenName(mDisplay, DefaultScreen(mDisplay), "");
+    // Set font for layouts.
+    mFont = XftFontOpenName(mDisplay,
+        DefaultScreen(mDisplay), "");
     if (mFont == NULL) {
-        cout << COLOR_RED << "\nMsgBox: Cannot open font - "
+        cout << COLOR_RED << "\nxMsgBox: Cannot open XftFont - "
             "FATAL.\n" << COLOR_NORMAL;
         exit(3);
     }
@@ -101,22 +100,22 @@ int main(int argCount, char** argValues) {
     // Set xMsgBox title string.
     XTextProperty properties;
     properties.value = (unsigned char*) mMsgBoxTitle.c_str();
-
     properties.encoding = XA_STRING;
     properties.format = 8;
     properties.nitems = mMsgBoxTitle.length();
     XSetWMName(mDisplay, mMsgBox, &properties);
 
     // Set xMsgBox icon.
-    char* appName = strdup("msgbox");
-    char* iconName = mMsgBoxTitle == "Error" ? strdup("xmsgboxerror") :
-        mMsgBoxTitle == "Warning" ? strdup("xmsgboxwarning") :
-        strdup("xmsgboxinfo");
+    char* iconName = mMsgBoxTitle == "Error" ?
+        strdup("xmsgboxerror") :
+            mMsgBoxTitle == "Warning" ?
+                strdup("xmsgboxwarning") :
+                    strdup("xmsgboxinfo");
 
     XClassHint* classHint = XAllocClassHint();
     if (classHint) {
         classHint->res_class = iconName;
-        classHint->res_name = appName;
+        classHint->res_name = iconName;
         XSetClassHint(mDisplay, mMsgBox, classHint);
     }
     XTextProperty iconProperty;
@@ -127,25 +126,22 @@ int main(int argCount, char** argValues) {
     XMapWindow(mDisplay, mMsgBox);
     XMoveWindow(mDisplay, mMsgBox, mMsgBoxXPos, mMsgBoxYPos);
 
-    // Select observable x11-events.
+    // Select observable x11 events &
+    // Select observable x11 client messages.
     XSelectInput(mDisplay, mMsgBox, ExposureMask);
-
-    // Select observable x11-client messages.
-    Atom mDeleteMsg = XInternAtom(mDisplay,
+    Atom mDeleteMessage = XInternAtom(mDisplay,
         "WM_DELETE_WINDOW", False);
-    XSetWMProtocols(mDisplay, mMsgBox, &mDeleteMsg, 1);
+    XSetWMProtocols(mDisplay, mMsgBox, &mDeleteMessage, 1);
 
     // Loop until close event frees us.
     bool msgboxActive = true;
-
     while (msgboxActive) {
-        // Grab next event to examine.
         XEvent event;
         XNextEvent(mDisplay, &event);
 
         // Process ClientMsg Close event.
         if (event.type == ClientMessage) {
-            if (event.xclient.data.l[0] == mDeleteMsg) {
+            if (event.xclient.data.l[0] == mDeleteMessage) {
                 msgboxActive = false;
             }
             break;
@@ -168,24 +164,16 @@ int main(int argCount, char** argValues) {
 }
 
 /** ********************************************************
- ** This method displays the xMsgBox version string.
- **/
-void displayVersion() {
-    cout << COLOR_BLUE << "\n" << APP_VERSION <<
-        COLOR_NORMAL << "\n";
-}
-
-/** ********************************************************
  ** This method displays the basic use syntax.
  **/
 void displayUsage() {
     cout << COLOR_BLUE << "\nUseage:" << COLOR_NORMAL << "\n";
-    cout << COLOR_GREEN << "   " << APP_NAME << " xPos yPos "
+    cout << COLOR_GREEN << "   xMsgBox xPos yPos "
         "title message message2 message3 ..." <<
         COLOR_NORMAL << "\n";
 
     cout << COLOR_BLUE << "\nExample:" << COLOR_NORMAL << "\n";
-    cout << COLOR_GREEN << "   " << APP_NAME << " 600 400 \"Error\" "
+    cout << COLOR_GREEN << "   xMsgBox 600 400 \"Error\" "
         "\"Something failed.\" \"Please try later.\"" <<
         COLOR_NORMAL << "\n";
 }
