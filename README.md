@@ -14,16 +14,17 @@
     
 ## Installation
     
-### CD into source repo.
+### CD into source repo
     make
-    
+    make run
+
     sudo make install
     sudo make uninstall
     
     make clean
     
     
-## Usage
+## Usage after install
     xMsgBox xPos yPos title message message2 message3 ...
     
     
@@ -31,7 +32,7 @@
     xMsgBox 600 400 "Error" "Something failed." "Please try later."
     
     
-## markcapella@twcny.rr.com Rocks !
+## markjamescapella@proton.me Rocks !
     Yeah I do.
     
     

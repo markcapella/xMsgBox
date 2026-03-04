@@ -21,7 +21,7 @@ COLOR_WHITE := $(shell tput setaf 7)
 CC = g++
 
 X11_CFLAGS = `pkg-config --cflags x11`
-X11_LFLAGS = `pkg-config --libs x11`
+X11_LFLAGS = `pkg-config --libs x11 libpng`
 
 FREETYPE_CFLAGS = `pkg-config --cflags xft`
 FREETYPE_LFLAGS = `pkg-config --libs xft`
@@ -46,15 +46,54 @@ all: xMsgBox.cpp
 	@echo "$(COLOR_BLUE)Build Starts.$(COLOR_NORMAL)"
 	@echo
 
+	$(CC) $(X11_CFLAGS) -c xPngWrapper.cpp
 	$(CC) $(X11_CFLAGS) $(FREETYPE_CFLAGS) \
-		-o xMsgBox.o -c xMsgBox.cpp
-	$(CC) xMsgBox.o $(X11_LFLAGS) $(FREETYPE_LFLAGS) \
+		-c xMsgBox.cpp
+
+	$(CC) xMsgBox.o xPngWrapper.o \
+		$(X11_LFLAGS) $(FREETYPE_LFLAGS) \
 		-o xMsgBox
 
 	@echo "true" > "BUILD_COMPLETE"
 
 	@echo
 	@echo "$(COLOR_BLUE)Build Done.$(COLOR_NORMAL)"
+
+# ****************************************************
+# make run
+#
+run:
+	@if [ ! -f BUILD_COMPLETE ]; then \
+		echo; \
+		echo "$(COLOR_RED)Error!$(COLOR_NORMAL) Nothing"\
+			"currently built to run."; \
+		echo; \
+		echo "Please make this project first, with:"; \
+		echo "   $(COLOR_GREEN)make$(COLOR_NORMAL)"; \
+		echo; \
+		exit 1; \
+	fi
+
+	@if [ "$(shell id -u)" = 0 ]; then \
+		echo; \
+		echo "$(COLOR_RED)Error!$(COLOR_NORMAL) You must not"\
+			"be root to perform this action."; \
+		echo; \
+		echo  "Please re-run with:"; \
+		echo "   $(COLOR_GREEN)make run$(COLOR_NORMAL)"; \
+		echo; \
+		exit 1; \
+	fi
+
+	@echo
+	@echo "$(COLOR_BLUE)Run Starts.$(COLOR_NORMAL)"
+	@echo
+
+	./xMsgBox 600 400 "Error" "Something failed." \
+		"Please try later."
+
+	@echo
+	@echo "$(COLOR_BLUE)Run Done.$(COLOR_NORMAL)"
 
 # ****************************************************
 # sudo make install
@@ -145,6 +184,7 @@ clean:
 	@echo "$(COLOR_BLUE)Clean Starts.$(COLOR_NORMAL)"
 	@echo
 
+	rm -f xPngWrapper.o
 	rm -f xMsgBox.o
 	rm -f xMsgBox
 

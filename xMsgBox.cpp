@@ -15,20 +15,36 @@ using namespace std;
 
 // Application.
 #include "xMsgBox.h"
+#include "xPngWrapper.h"
 
 
-/** ********************************************************
- ** Module globals and consts.
- **/
+/**
+ * Module Consts.
+ */
+const string INFO_PNGFILE =
+    "/usr/share/icons/hicolor/48x48/apps/xmsgboxinfo.png";
+
+const string WARNING_PNGFILE =
+    "/usr/share/icons/hicolor/48x48/apps/xmsgboxwarning.png";
+
+const string ERROR_PNGFILE =
+    "/usr/share/icons/hicolor/48x48/apps/xmsgboxerror.png";
+
+const XftColor mFontColor = {
+    .pixel = 0x0, .color = {
+        .red = 0xff, .green = 0xff,
+        .blue = 0xff, .alpha = 0xffff
+    }
+};
+
+/**
+ * Module globals.
+ */
 Display* mDisplay;
 Window mMsgBox;
 XftFont* mFont;
+xPngWrapper* mIconWrapper;
 
-const XftColor mFontColor = { .pixel = 0x0, .color = { 
-    .red = 0xff, .green = 0xff,
-    .blue = 0xff, .alpha = 0xffff } };
-
-// xMsgBox globals.
 int mMsgBoxXPos;
 int mMsgBoxYPos;
 
@@ -42,21 +58,34 @@ int mMsgBoxTextareaHeight;
 
 std::list<string> mMsgBoxLines;
 
-
-/** ********************************************************
- ** Module Entry.
- **/
+/**
+ * Module Entry.
+ */
 int main(int argCount, char** argValues) {
     // Ensure proper invocation.
     if (argCount < APP_PARMS_REQUIRED) {
         displayUsage();
-        exit(1);
+        return true;
     }
 
     // Parse invocation.
     mMsgBoxXPos = atoi(argValues[1]);
     mMsgBoxYPos = atoi(argValues[2]);
     mMsgBoxTitle += argValues[3];
+
+    // Get wrapped PNG file for the Icon.
+    char* pngFileName = mMsgBoxTitle == "Error" ?
+        strdup(ERROR_PNGFILE.c_str()) :
+        mMsgBoxTitle == "Warning" ?
+            strdup(WARNING_PNGFILE.c_str()) :
+            strdup(INFO_PNGFILE.c_str());
+    mIconWrapper = new xPngWrapper(pngFileName);
+    if (mIconWrapper->hasErrorStatus()) {
+        cout << COLOR_RED << endl << "MsgBox: " <<
+            mIconWrapper->errorStatus() <<
+            COLOR_NORMAL << endl;
+        return true;
+    }
 
     // Open X11 display, ensure it's available.
     mDisplay = XOpenDisplay(NULL);
@@ -97,7 +126,7 @@ int main(int argCount, char** argValues) {
         mMsgBoxWindowWidth, mMsgBoxWindowHeight, 1,
         BlackPixel(mDisplay, 0), WhitePixel(mDisplay, 0));
 
-    // Set xMsgBox title string.
+    // Set title string.
     XTextProperty properties;
     properties.value = (unsigned char*) mMsgBoxTitle.c_str();
     properties.encoding = XA_STRING;
@@ -105,22 +134,27 @@ int main(int argCount, char** argValues) {
     properties.nitems = mMsgBoxTitle.length();
     XSetWMName(mDisplay, mMsgBox, &properties);
 
-    // Set xMsgBox icon.
-    char* iconName = mMsgBoxTitle == "Error" ?
-        strdup("xmsgboxerror") :
-            mMsgBoxTitle == "Warning" ?
-                strdup("xmsgboxwarning") :
-                    strdup("xmsgboxinfo");
-
+    // Set icon name strings.
     XClassHint* classHint = XAllocClassHint();
     if (classHint) {
-        classHint->res_class = iconName;
-        classHint->res_name = iconName;
+        classHint->res_class = pngFileName;
+        classHint->res_name = pngFileName;
         XSetClassHint(mDisplay, mMsgBox, classHint);
+        XFree(classHint);
     }
     XTextProperty iconProperty;
-    XStringListToTextProperty(&iconName, 1, &iconProperty);
+    XStringListToTextProperty(&pngFileName, 1,
+        &iconProperty);
     XSetWMIconName(mDisplay, mMsgBox, &iconProperty);
+
+    // Set the _NET_WM_ICON property from the vector.
+    const Atom net_wm_icon = XInternAtom(mDisplay,
+        "_NET_WM_ICON", False);
+    XChangeProperty(mDisplay, mMsgBox, net_wm_icon,
+        XA_CARDINAL, 32, PropModeReplace,
+        reinterpret_cast<unsigned char*>
+            (mIconWrapper->getPngData().data()),
+             mIconWrapper->getPngData().size());
 
     // Map (show) xMsgBox window.
     XMapWindow(mDisplay, mMsgBox);
@@ -150,10 +184,16 @@ int main(int argCount, char** argValues) {
         // Process Expose event. Set the xMsgBox
         // Msg on Window expose.
         if (event.type == Expose) {
-            if (DEBUG_IS_ON) {
-                drawMessageBoxOutLines(argCount);
+            if (XPending(mDisplay) == 0) {
+                const XExposeEvent* EVENT =
+                    (XExposeEvent*) &event;
+                if (EVENT->width > 1 && EVENT->height > 1) {
+                    drawMessageBox(argCount, argValues);
+                    if (DEBUG_IS_ON) {
+                        drawMessageBoxOutLines(argCount);
+                    }
+                }
             }
-            drawMessageBox(argCount, argValues);
         }
     }
 
@@ -163,11 +203,11 @@ int main(int argCount, char** argValues) {
     XCloseDisplay(mDisplay);
 }
 
-/** ********************************************************
- ** This method displays the basic use syntax.
- **/
+/**
+ * This method displays the basic use syntax.
+ */
 void displayUsage() {
-    cout << COLOR_BLUE << "\nUseage:" << COLOR_NORMAL << "\n";
+    cout << COLOR_BLUE << "\nUsage:" << COLOR_NORMAL << "\n";
     cout << COLOR_GREEN << "   xMsgBox xPos yPos "
         "title message message2 message3 ..." <<
         COLOR_NORMAL << "\n";
@@ -178,9 +218,9 @@ void displayUsage() {
         COLOR_NORMAL << "\n";
 }
 
-/** ********************************************************
- ** This method returns pixel witdh of a text string.
- **/
+/**
+ * This method returns pixel witdh of a text string.
+ */
 int getMaxMsgPixelWidth(int argCount, char** argValues) {
     int index = getFirstMessageArgI();
     const int indexEnd = getLastMessageArgI(argCount);
@@ -196,9 +236,9 @@ int getMaxMsgPixelWidth(int argCount, char** argValues) {
     return resultWidth;
 }
 
-/** ********************************************************
- ** This method returns pixel height of a textSring.
- **/
+/**
+ * This method returns pixel height of a textSring.
+ */
 int getMaxMsgPixelHeight(int argCount, char** argValues) {
     int index = getFirstMessageArgI();
     const int indexEnd = getLastMessageArgI(argCount);
@@ -214,9 +254,9 @@ int getMaxMsgPixelHeight(int argCount, char** argValues) {
     return resultHeight;
 }
 
-/** ********************************************************
- ** This method returns pixel witdh of a text string.
- **/
+/**
+ * This method returns pixel witdh of a text string.
+ */
 int getStringPixelWidth(string textString) {
     XGlyphInfo textExtents;
     XftTextExtents8(mDisplay, mFont, (const FcChar8*)
@@ -225,9 +265,9 @@ int getStringPixelWidth(string textString) {
     return textExtents.width;
 }
 
-/** ********************************************************
- ** This method returns pixel height of a text string.
- **/
+/**
+ * This method returns pixel height of a text string.
+ */
 int getStringPixelHeight(string textString) {
     XGlyphInfo textExtents;
     XftTextExtents8(mDisplay, mFont, (const FcChar8*)
@@ -236,10 +276,10 @@ int getStringPixelHeight(string textString) {
     return textExtents.height;
 }
 
-/** ********************************************************
- ** This method draws an visual outline of the xMsgBox
- ** for debugging. S/b safe to remove / deprecate.
- **/
+/**
+ * This method draws an visual outline of the xMsgBox
+ * for debugging. S/b safe to remove / deprecate.
+ */
 void drawMessageBoxOutLines(int argCount) {
     GC gc = XCreateGC(mDisplay, mMsgBox, 0, NULL);
 
@@ -264,9 +304,9 @@ void drawMessageBoxOutLines(int argCount) {
         mMsgBoxTextareaWidth, mMsgBoxWindowHeight - BOTTOM_MARGIN);
 }
 
-/** ********************************************************
- ** Draw all message strings centered in the window.
- **/
+/**
+ * Draw all message strings centered in the window.
+ */
 void drawMessageBox(int argCount, char** argValues) {
     int index = getFirstMessageArgI();
     const int indexEnd = getLastMessageArgI(argCount);
@@ -288,9 +328,9 @@ void drawMessageBox(int argCount, char** argValues) {
     }
 }
 
-/** ********************************************************
- ** This method determines pixel offset for a message
- ** string drawline.
+/**
+ * This method determines pixel offset for a message
+ * string drawline.
  */
 long getYPosForMessageBoxLineIndex(long lineIndex,
     long lineHeight, long lineSpace) {
@@ -298,36 +338,36 @@ long getYPosForMessageBoxLineIndex(long lineIndex,
     return ((lineIndex + 1) * (lineHeight + lineSpace));
 }
 
-/** ********************************************************
- ** This method returns the number of message strings that
- ** xMsgBox is to display from the users cmdline.
- **/
+/**
+ * This method returns the number of message strings that
+ * xMsgBox is to display from the users cmdline.
+ */
 int getNumberOfMessages(int argCount) {
     return getLastMessageArgI(argCount) -
         getFirstMessageArgI() + 1;
 }
 
-/** ********************************************************
- ** This method returns the argi of argv[] of the First
- ** message string that xMsgBox is to display from
- ** the users cmdline.
- **/
+/**
+ * This method returns the argi of argv[] of the First
+ * message string that xMsgBox is to display from
+ * the users cmdline.
+ */
 int getFirstMessageArgI() {
     return APP_PARMS_REQUIRED - 1;
 }
 
-/** ********************************************************
- ** This method returns the argi of argv[] of the Last
- ** message string that xMsgBox is to display from
- ** the users cmdline.
- **/
+/**
+ * This method returns the argi of argv[] of the Last
+ * message string that xMsgBox is to display from
+ * the users cmdline.
+ */
 int getLastMessageArgI(int argCount) {
     return argCount - 1;
 }
 
-/** ********************************************************
- ** This method logs critical info for devs.
- **/
+/**
+ * This method logs critical info for devs.
+ */
 void logDebugValues(int argCount) {
     cout << "argCount                : [" << argCount << "]\n";
     cout << "APP_PARMS_REQUIRED      : [" <<
