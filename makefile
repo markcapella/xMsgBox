@@ -3,7 +3,7 @@
 # Variables to control Compile / Link.
 #
 APP_NAME="xMsgBox"
-APP_VERSION="2026-01-04"
+APP_VERSION="2026-03-05"
 APP_AUTHOR="Mark James Capella"
 
 # Color styling.
@@ -89,8 +89,8 @@ run:
 	@echo "$(COLOR_BLUE)Run Starts.$(COLOR_NORMAL)"
 	@echo
 
-	./xMsgBox 600 400 "Error" "Something failed." \
-		"Please try later."
+	./xMsgBox 600 400 "Error" \
+		"Something failed." "Please try later."
 
 	@echo
 	@echo "$(COLOR_BLUE)Run Done.$(COLOR_NORMAL)"

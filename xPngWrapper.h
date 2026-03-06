@@ -28,9 +28,7 @@ using namespace std;
  */
 class xPngWrapper {
     public:
-        xPngWrapper();
-        xPngWrapper(string mPngFileName);
-
+        xPngWrapper(const vector<string>& pngFileNames);
         ~xPngWrapper();
 
         int getWidth();
@@ -38,20 +36,24 @@ class xPngWrapper {
         int getColorType();
         int getBitDepth();
 
-        // vector<unsigned long> getXIcon();
         vector<unsigned long> getPngData();
 
         bool hasErrorStatus();
         string errorStatus();
 
     private:
-        string mPngFileName{};
+        FILE* getFileFromList(const vector<string>&
+            pngFileNames);
+
+        const vector<string> mPngFileName;
+
+        png_structp mPngFileReadStruct;
+        png_infop mPngFileInfoStruct;
 
         png_uint_32 mWidth{0};
         png_uint_32 mHeight{0};
         int mColorType{0};
         int mBitDepth{0};
-
         vector<unsigned long> mPngData{};
 
         string mErrorStatus{};

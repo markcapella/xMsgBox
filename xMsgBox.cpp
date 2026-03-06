@@ -21,14 +21,12 @@ using namespace std;
 /**
  * Module Consts.
  */
-const string INFO_PNGFILE =
-    "/usr/share/icons/hicolor/48x48/apps/xmsgboxinfo.png";
+const string ICON_PNGPATH =
+    "/usr/share/icons/hicolor/48x48/apps/";
 
-const string WARNING_PNGFILE =
-    "/usr/share/icons/hicolor/48x48/apps/xmsgboxwarning.png";
-
-const string ERROR_PNGFILE =
-    "/usr/share/icons/hicolor/48x48/apps/xmsgboxerror.png";
+const string INFO_PNGFILE = "xmsgboxinfo.png";
+const string WARNING_PNGFILE = "xmsgboxwarning.png";
+const string ERROR_PNGFILE = "xmsgboxerror.png";
 
 const XftColor mFontColor = {
     .pixel = 0x0, .color = {
@@ -79,7 +77,11 @@ int main(int argCount, char** argValues) {
         mMsgBoxTitle == "Warning" ?
             strdup(WARNING_PNGFILE.c_str()) :
             strdup(INFO_PNGFILE.c_str());
-    mIconWrapper = new xPngWrapper(pngFileName);
+    mIconWrapper = new xPngWrapper({
+        string(pngFileName),
+        string(ICON_PNGPATH + pngFileName)
+    });
+
     if (mIconWrapper->hasErrorStatus()) {
         cout << COLOR_RED << endl << "MsgBox: " <<
             mIconWrapper->errorStatus() <<
