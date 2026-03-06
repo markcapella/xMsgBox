@@ -3,7 +3,7 @@
 # Variables to control Compile / Link.
 #
 APP_NAME="xMsgBox"
-APP_VERSION="2026-03-05"
+APP_VERSION="2026-03-06"
 APP_AUTHOR="Mark James Capella"
 
 # Color styling.
@@ -18,7 +18,7 @@ COLOR_MAGENTA := $(shell tput setaf 5)
 COLOR_CYAN := $(shell tput setaf 6)
 COLOR_WHITE := $(shell tput setaf 7)
 
-CC = g++
+CPP = g++
 
 X11_CFLAGS = `pkg-config --cflags x11`
 X11_LFLAGS = `pkg-config --libs x11 libpng`
@@ -46,11 +46,13 @@ all: xMsgBox.cpp
 	@echo "$(COLOR_BLUE)Build Starts.$(COLOR_NORMAL)"
 	@echo
 
-	$(CC) $(X11_CFLAGS) -c xPngWrapper.cpp
-	$(CC) $(X11_CFLAGS) $(FREETYPE_CFLAGS) \
+	$(CPP) $(APP_CFLAGS) -c xDisplayHelper.cpp
+	$(CPP) $(X11_CFLAGS) -c xPngWrapper.cpp
+	$(CPP) $(X11_CFLAGS) $(FREETYPE_CFLAGS) \
 		-c xMsgBox.cpp
 
-	$(CC) xMsgBox.o xPngWrapper.o \
+	$(CPP) xMsgBox.o \
+		xPngWrapper.o xDisplayHelper.o \
 		$(X11_LFLAGS) $(FREETYPE_LFLAGS) \
 		-o xMsgBox
 
@@ -184,6 +186,7 @@ clean:
 	@echo "$(COLOR_BLUE)Clean Starts.$(COLOR_NORMAL)"
 	@echo
 
+	rm -f xDisplayHelper.o
 	rm -f xPngWrapper.o
 	rm -f xMsgBox.o
 	rm -f xMsgBox

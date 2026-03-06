@@ -1,9 +1,16 @@
 
+/**
+ * This is a multi-line GUI Message Box for bash
+ * scripts. Built with native X11 & Xf.
+ */
+
 // Std C and c++.
 #include <iostream>
 #include <list>
 #include <string>
 #include <string.h>
+
+using namespace std;
 
 // X11.
 #include <X11/Xatom.h>
@@ -11,10 +18,9 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
-using namespace std;
-
 // Application.
 #include "xMsgBox.h"
+#include "xDisplayHelper.h"
 #include "xPngWrapper.h"
 
 
@@ -38,7 +44,9 @@ const XftColor mFontColor = {
 /**
  * Module globals.
  */
+xDisplayHelper* mDisplayHelper;
 Display* mDisplay;
+
 Window mMsgBox;
 XftFont* mFont;
 xPngWrapper* mIconWrapper;
@@ -83,14 +91,15 @@ int main(int argCount, char** argValues) {
     });
 
     if (mIconWrapper->hasErrorStatus()) {
-        cout << COLOR_RED << endl << "MsgBox: " <<
+        cout << COLOR_RED << endl << "xMsgBox: " <<
             mIconWrapper->errorStatus() <<
             COLOR_NORMAL << endl;
         return true;
     }
 
     // Open X11 display, ensure it's available.
-    mDisplay = XOpenDisplay(NULL);
+    mDisplayHelper = new xDisplayHelper();
+    mDisplay = mDisplayHelper->getDisplay();
     if (mDisplay == NULL) {
         cout << COLOR_RED << "\nxMsgBox: X11 Windows are "
             "unavailable with this desktop. - FATAL" <<

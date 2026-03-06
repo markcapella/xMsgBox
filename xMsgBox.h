@@ -1,4 +1,11 @@
 
+#pragma once
+
+/**
+ * This is a multi-line GUI Message Box for bash
+ * scripts. Built with native X11 & Xf.
+ */
+
 // Color styling.
 #define COLOR_RED "\033[0;31m"
 #define COLOR_GREEN "\033[1;32m"
@@ -6,7 +13,7 @@
 #define COLOR_BLUE "\033[1;34m"
 #define COLOR_NORMAL "\033[0m"
 
-// xMsgBox consts.
+// Module Defines.
 #define LEFT_MARGIN 100
 #define RIGHT_MARGIN_FLUFF 4
 #define RIGHT_MARGIN LEFT_MARGIN + RIGHT_MARGIN_FLUFF 
